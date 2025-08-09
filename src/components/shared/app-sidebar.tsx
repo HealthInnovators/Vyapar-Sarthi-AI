@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
   Boxes,
   Home,
+  MessageSquare,
   Receipt,
   Users,
 } from 'lucide-react';
@@ -23,7 +24,8 @@ import { Separator } from '../ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const menuItems = [
-  { href: '/', label: 'Dashboard', icon: Home },
+  { href: '/', label: 'Chat', icon: MessageSquare },
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/products', label: 'Products', icon: Boxes },
   { href: '/parties', label: 'Parties', icon: Users },
   { href: '/transactions', label: 'Transactions', icon: Receipt },
