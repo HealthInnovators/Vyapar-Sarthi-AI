@@ -43,6 +43,11 @@ const MessageBubble = ({ message }: { message: { text: string; sender: string; t
 
 
 export default function App() {
+    const [clientLoaded, setClientLoaded] = useState(false);
+    useEffect(() => {
+        setClientLoaded(true);
+    }, []);
+
    // State for managing conversation messages
    const [messages, setMessages] = useState([
        {
@@ -128,6 +133,10 @@ export default function App() {
            handleSendMessage();
        }
    };
+   
+    if (!clientLoaded) {
+        return null; // Or a loading spinner
+    }
 
 
    return (
