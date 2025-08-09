@@ -31,7 +31,7 @@ const MessageBubble = ({ message }: { message: { text: string; sender: string; t
                        : 'bg-muted text-muted-foreground rounded-bl-none'
                }`}
            >
-               <p className="text-base">{text}</p>
+               <p className={`text-base ${isUser ? 'text-right' : 'text-left'}`}>{text}</p>
                <p className="text-xs text-right mt-1 opacity-70">{timestamp}</p>
            </div>
        </div>
