@@ -43,7 +43,7 @@ export function AppSidebar() {
             Vyapar Sarthi
           </span>
         </div>
-        <div className="md:hidden">
+        <div>
           <SidebarTrigger />
         </div>
       </SidebarHeader>
