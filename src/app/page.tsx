@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import { handleChatMessage } from '@/lib/actions';
 
 
 // --- Helper Components ---
@@ -63,6 +64,7 @@ export default function App() {
    const [inputText, setInputText] = useState('');
    // State to simulate recording state
    const [isRecording, setIsRecording] = useState(false);
+   const [isLoading, setIsLoading] = useState(false);
   
    const conversationEndRef = useRef<HTMLDivElement>(null);
 
@@ -82,32 +84,48 @@ export default function App() {
            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
        };
        setMessages(prevMessages => [...prevMessages, newMessage]);
-      
-       // Mock assistant reply after a short delay
-       if (sender === 'user') {
-           setTimeout(() => {
-                const mockReply = {
-                   id: messages.length + 2,
-                   text: `Okay, I've processed your request: "${text}". The action has been completed.`,
-                   sender: 'assistant',
-                   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-               };
-               setMessages(prevMessages => [...prevMessages, mockReply]);
-           }, 1500);
-       }
+       return newMessage;
    };
 
+   // Function to handle backend processing and assistant reply
+   const processUserMessage = async (text: string) => {
+        setIsLoading(true);
+        const result = await handleChatMessage(text);
+        
+        let replyText = "";
+        if (result.error) {
+            replyText = `Sorry, I encountered an error: ${result.details || result.error}`;
+        } else {
+            switch(result.type) {
+                case 'ADD_STOCK':
+                    replyText = `Added ${result.data.quantity} of ${result.data.product_name} to stock.`;
+                    break;
+                case 'RECORD_SALE':
+                    replyText = `Recorded sale of ${result.data.entities.quantity} ${result.data.entities.product_name}.`;
+                    break;
+                case 'ADD_CREDIT':
+                    replyText = `Added credit of ₹${result.data.entities.amount} for ${result.data.entities.customer_name}.`;
+                    break;
+                case 'CHECK_BALANCE':
+                     replyText = `Checking balance for ${result.data.entities.customer_name}.`;
+                    break;
+                default:
+                    replyText = "I've processed your request.";
+            }
+        }
+        
+        addMessage(replyText, 'assistant');
+        setIsLoading(false);
+   }
 
    // Handler for sending a text message
-   const handleSendMessage = () => {
+   const handleSendMessage = async () => {
        if (inputText.trim()) {
            addMessage(inputText, 'user');
+           await processUserMessage(inputText);
            setInputText('');
        }
    };
-
-
-
 
    // Handler for the microphone button press
    const handleMicPress = () => {
@@ -124,6 +142,7 @@ export default function App() {
            ];
            const randomCommand = voiceCommands[Math.floor(Math.random() * voiceCommands.length)];
            addMessage(randomCommand, 'user');
+           processUserMessage(randomCommand);
        }, 2500); // Simulate a 2.5 second recording
    };
   
@@ -149,6 +168,9 @@ export default function App() {
                    {messages.map(msg => (
                        <MessageBubble key={msg.id} message={msg} />
                    ))}
+                    {isLoading && (
+                        <MessageBubble message={{ text: "...", sender: 'assistant', timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }} />
+                    )}
                    <div ref={conversationEndRef} />
                </div>
            </main>
@@ -164,6 +186,7 @@ export default function App() {
                        onKeyPress={handleKeyPress}
                        placeholder="Or type your command..."
                        className="flex-1 p-3 border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-ring transition"
+                       disabled={isLoading || isRecording}
                    />
                    {isRecording ? (
                        <div className="flex items-center justify-center bg-red-500 text-white w-16 h-16 rounded-full transition-all duration-300 ease-in-out">
@@ -173,7 +196,8 @@ export default function App() {
                    ) : (
                        <button
                            onClick={handleMicPress}
-                           className="bg-primary hover:bg-primary/90 text-primary-foreground w-16 h-16 rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out"
+                           disabled={isLoading}
+                           className="bg-primary hover:bg-primary/90 text-primary-foreground w-16 h-16 rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:scale-100"
                        >
                            {/* Microphone Icon */}
                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>

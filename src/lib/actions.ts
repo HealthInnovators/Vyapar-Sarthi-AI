@@ -27,7 +27,16 @@ type VoiceCommandResult =
   | { type: 'CHECK_BALANCE'; data: any }
   | { error: string; details?: string };
 
+/**
+ * @deprecated Use handleChatMessage instead.
+ */
 export async function handleVoiceCommand(
+  command: string
+): Promise<VoiceCommandResult> {
+  return handleChatMessage(command);
+}
+
+export async function handleChatMessage(
   command: string
 ): Promise<VoiceCommandResult> {
   const validation = commandSchema.safeParse(command);
@@ -40,7 +49,9 @@ export async function handleVoiceCommand(
   try {
     if (
       lowerCaseCommand.includes('stock') ||
-      lowerCaseCommand.includes('add')
+      lowerCaseCommand.includes('add') ||
+      lowerCaseCommand.includes('khareed') ||
+      lowerCaseCommand.includes('purchase')
     ) {
       const result = await processVoiceCommand({ voiceCommand: command });
       return { type: 'ADD_STOCK', data: result };
